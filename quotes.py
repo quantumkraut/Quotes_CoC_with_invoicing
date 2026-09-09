@@ -286,7 +286,7 @@ st.metric("Individual Raw Sample cost", f"£{total:.2f}")
 st.metric("Total Raw Sample cost (all samples)", f"£{total * int(nosamp):.2f}")
 
 st.metric("Total price (incl. all samples, MTS uplift, collection fee)", f"£{total*(1+upliftpercent)*int(nosamp)+collectionfee:.2f}")
-st.metric("Total price (incl. VAT)", f"£{total*(1+upliftpercent)*int(nosamp)+collectionfee*1.2:.2f}")
+st.metric("Total price (incl. VAT)", f"£{(total*(1+upliftpercent)*int(nosamp)+collectionfee)*1.2:.2f}")
 
 
 st.write("---")
