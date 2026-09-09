@@ -1,4 +1,5 @@
 import streamlit as st
+
 from openpyxl import load_workbook
 from io import BytesIO
 from datetime import date, datetime, timedelta
@@ -153,48 +154,67 @@ date_of = st.date_input(label = "When was the sample collected?", format = "DD/M
 
 collectionfee = 0
 determinands = {}
+quoteslink1 = {}
+quoteslink2 = {}
+
 
 if option == "DETS":
     determinands = {
-        "DETS Spectrum Suite": 133.51,
+        "DETS Spectrum Suite (incl. Asbestos y/n)": 133.51,
         "Cr(VI)": 4.82,
         "Total Sulphur": 6.28,
-        "WAC (1-Stage)": 178.90,
+        "WAC (1-Stage)": 175.90,
         "HMRC LOI": 9.62,
         "Alkali Reserve": 24.94,
         "WS Chloride": 4.82,
         "WS Sulphates": 6.28,
-        "Asbestos (Y/N)": 20.68,
         "Asbestos Quantification (gravimetric)": 45.76,
     }
+    quoteslink1 = {
+    "path": "C:/Users/lukeb/MTS Dropbox/MTS Team Folder/mts shared folders/5 Library/Labs/DETS/3. Current Prices 2026",
+    "name": "Spectrum Suite"
+    }
+
     collectionfee = 40
 
 elif option == "OEMA":
     determinands = {"WM3 Suite + Alkali Reserve Test + Asbestos ID": 337}
     collectionfee = 52.5
+    
 
 elif option == "Envirochem":
     determinands = {
-        "SWTA Effluent Suite": 591.60,
-        "Effluent Suite": 238.26,
-        "MRF Dust Suite": 318.90,
-        "Soil/Solid Suite": 329.76,
-        "AD Grit WITH WAC": 420.24,
-        "AD Grit": 193.14,
-        "HMRC LOI": 6.28,
+        "SWTA Effluent Suite (WM3 + WWTC determinands (Q26-07962))": 318.55,
+        "Standard Effluent WM3 Suite (Q26-08582)": 222.5,
+        "Soil/Solid WM3 Suite (Q26-08582)": 258.4,
+        "Enhanced Effluent suite (metals, pH, SS, BTEX, Cyanide, Cr(VI), COD, PAHs, TPH; Q26-08584)": 345.54,
+        "Biomass Ash Suite (Q26-07969)": 335.66,
+        "AD plant digestate WM3 suite (Q26-07802)": 160.95,
+        "HMRC LOI": 13.3,
         "WAC (1-Stage)": 175.90,
         "Cr(VI)": 14.1,
+        "Asbestos ID": 33.0,
+        "Asbestos Quantification": 36.30
     }
     collectionfee = 40
+    quoteslink1 = {
+    "path": "C:/Users/lukeb/MTS Dropbox/MTS Team Folder/mts shared folders/5 Library/Labs/Envirochem/3. Current Prices 2026",
+    "name": "Envirochem Price List Folder"
+    }
 
 elif option == "Chemtech":
     determinands = {
-        "Spectrum Suite": 125,
-        "Full 1-Stage WAC": 150,
-        "BS8601 Subsoils": 130.40,
-        "BS3882 Topsoils": 135,
+        "Spectrum Suite (Q26-01561)": 125,
+        "Full 1-Stage WAC (Q26-01561)": 150,
+        "BS8601 Subsoils (Q26-01561)": 130.40,
+        "BS3882 Topsoils (Q26-01561)": 135,
+        "Biomass Bottom Ash Suite (S26-0199)": 575.87 
     }
     collectionfee = 26.25
+    quoteslink1 = {
+    "path": "C:/Users/lukeb/MTS Dropbox/MTS Team Folder/mts shared folders/5 Library/Labs/Chemtech/1. Pricing 2026",
+    "name": "Full Price List"  
+    }
 
 # ------------------ DETERMINANDS UI ------------------
 
@@ -204,13 +224,17 @@ nosamp = st.selectbox(label = "How many samples?", options = ("1", "2", "3", "4"
 
 st.subheader("Select Determinands")
 
-cols = st.columns(3)
+cols = st.columns(2)
 selected = {}
 
 for i, (name, price) in enumerate(determinands.items()):
-    with cols[i % 3]:
+    with cols[i % 2]:
         if st.checkbox(f"{name} (£{price:.2f})"):
             selected[name] = price
+
+if option != "OEMA":
+    if st.button("Open Full Lab Quote List"):
+        os.startfile(quoteslink1["path"])
 
 # ------------------ CUSTOM ITEMS ------------------
 
@@ -232,7 +256,8 @@ selected.update(st.session_state.custom_items)
 
 # ------------------ TOTAL SUMMARY ------------------
 
-total = sum(selected.values()) * int(nosamp)
+total = sum(selected.values())
+totalwithcollection = sum(selected.values())
 
 st.subheader("Quote Summary")
 
@@ -240,23 +265,32 @@ c1, c2, c3 = st.columns(3)
 
 with c1:
     if st.checkbox("Add collection fee", value=True):
-        total += collectionfee
+        totalwithcollection += collectionfee
 
 with c2:
-    if st.checkbox("Add disposal fee (£2)"):
+    if st.checkbox("Add disposal fee (£2 / sample)", value=True):
         total += 2 * int(nosamp)
 
-with c3:
-    st.metric("Total", f"£{total:.2f}")
+upliftpercent = 0
+
+if total+collectionfee < 2000:
+    upliftpercent = 0.25
+elif total+collectionfee < 4000:
+    upliftpercent = 0.2
+elif total+collectionfee < 6000:
+    upliftpercent = 0.15
+else:
+    upliftpercent = 0.1
+
+st.metric("Individual Raw Sample cost", f"£{total:.2f}")
+st.metric("Total Raw Sample cost (all samples)", f"£{total * int(nosamp):.2f}")
+
+st.metric("Total price (incl. all samples, MTS uplift, collection fee)", f"£{total*(1+upliftpercent)*int(nosamp)+collectionfee:.2f}")
+st.metric("Total price (incl. VAT)", f"£{total*(1+upliftpercent)*int(nosamp)+collectionfee*1.2:.2f}")
+
 
 st.write("---")
 
-
-
-
-
-st.write(f"MTS Price (Total +25%): £{1.25 * total:.2f}")
-st.header(f"MTS Price (incl. VAT): £{1.2 * 1.25 * total:.2f}")
 
 #now to prepare to copy to clipboard
 determinands_comma = "; ".join(selected)
@@ -268,7 +302,7 @@ extra_20 = 0.2 * subtotal
 final_total = subtotal + extra_20
 
 #to copy to clipbaord
-tocopy = "\t".join([
+tocopy = "/t".join([
     option,
     client,
     project,
@@ -286,8 +320,8 @@ tocopy = "\t".join([
 ])
 
 
-st.subheader(":red[Click below to copy for MTS Systems]")
-copy_button(tocopy, tooltip="Copy", copied_label="Copied Successfully!", icon="st")
+#st.subheader(":red[Click below to copy for MTS Systems]")
+#copy_button(tocopy, tooltip="Copy", copied_label="Copied Successfully!", icon="st")
 
 st.write("---")
 #------------------ Invoicing ------------------
@@ -309,16 +343,13 @@ duedatestr = duedate.strftime("%Y-%m-%d")
 ## Get all contacts into dictionary
 #function
 def get_contacts():
-
     access_token = get_access_token()
-
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     r = requests.get(
         "https://api.freeagent.com/v2/contacts",
-        headers=headers
+        headers=headers,
+        params={"per_page": 100}
     )
 
     return r.json()
