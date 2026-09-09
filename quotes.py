@@ -343,16 +343,43 @@ duedatestr = duedate.strftime("%Y-%m-%d")
 ## Get all contacts into dictionary
 #function
 def get_contacts():
+
     access_token = get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
 
-    r = requests.get(
-        "https://api.freeagent.com/v2/contacts",
-        headers=headers,
-        params={"per_page": 100}
-    )
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json"
+    }
 
-    return r.json()
+    all_contacts = []
+    page = 1
+
+    while True:
+
+        r = requests.get(
+            "https://api.freeagent.com/v2/contacts",
+            headers=headers,
+            params={
+                "per_page": 100,
+                "page": page
+            }
+        )
+
+        r.raise_for_status()
+
+        data = r.json()
+
+        contacts = data.get("contacts", [])
+
+        all_contacts.extend(contacts)
+
+        # If fewer than 100 were returned, we've reached the last page
+        if len(contacts) < 100:
+            break
+
+        page += 1
+
+    return {"contacts": all_contacts}
 
 #calling fucntion and storing values
 contacts_data = get_contacts()
@@ -446,6 +473,7 @@ mapping = {
     "Groundwater": "GW",
     "River/Surface Water": "RW",
 }
+
 
 if st.button("➕ Add Sample"):
     st.session_state.samples.append({"id": "", "type": "Soil", "date": None})
