@@ -292,32 +292,6 @@ st.metric("Total price (incl. VAT)", f"£{(total*(1+upliftpercent)*int(nosamp)+c
 st.write("---")
 
 
-#now to prepare to copy to clipboard
-determinands_comma = "; ".join(selected)
-#number calcs:
-base = total
-extra_25 = 0.25 * (base)
-subtotal = base  + extra_25
-extra_20 = 0.2 * subtotal
-final_total = subtotal + extra_20
-
-#to copy to clipbaord
-tocopy = "/t".join([
-    option,
-    client,
-    project,
-    "",
-    f"{nosamp} samples",
-    determinands_comma,
-    date_of.strftime("%d/%m/%Y"),
-    str(base),
-    str(collectionfee),
-    str(extra_25),
-    str(subtotal),
-    str(extra_20),
-    str(final_total),
-    "No"
-])
 
 
 #st.subheader(":red[Click below to copy for MTS Systems]")
@@ -402,6 +376,8 @@ for i in contacts_dict:
 
 contact_button = st.selectbox(label = "Select Contact for Invoice", options=freeagent_contacts, placeholder="Select from dropdown", index=None)
 
+#join determinands into a string for invoice description
+determinands_comma = ", ".join(selected.keys())
 
 if contact_button != None:
     clienturl = contacts_dict[contact_button]
@@ -425,7 +401,7 @@ if contact_button != None:
                     {
                         "description": f"Lab testing: {determinands_comma}",
                         "quantity": int(nosamp),
-                        "price": (total*(1+upliftpercent)+collectionfee)
+                        "price": (total*(1+upliftpercent)+collectionfee/int(nosamp)),
                     }
                 ]
             }
