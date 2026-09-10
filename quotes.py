@@ -424,8 +424,8 @@ if contact_button != None:
                 "invoice_items": [
                     {
                         "description": f"Lab testing: {determinands_comma}",
-                        "quantity": 1,
-                        "price": subtotal
+                        "quantity": int(nosamp),
+                        "price": (total*(1+upliftpercent)+collectionfee)
                     }
                 ]
             }
